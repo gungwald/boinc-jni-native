@@ -1,14 +1,27 @@
 #include <jni.h>
 #include <boinc_api.h>
 
-#include "edu_berkeley_boinc_api_bridge_BasicAPI.h"
+#include "edu_berkeley_boinc_jni_Boinc.h"
 
-JNIEXPORT jint JNICALL
-Java_edu_berkeley_boinc_api_bridge_BasicAPI_boinc_1init(
-		JNIEnv *env,
-		jclass cls)
+const int BOINC_API_SUCCESS = 0;
+
+static jclass findBoincExceptionClass(JNIEnv *env);
+static jthrowable newBoincException(JNIEnv *env, int status);
+static void throwNewBoincException(JNIEnv *env, int status);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    init
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__
+  (JNIEnv *env, jobject boinc)
 {
-    return (jint) boinc_init();
+    int status;
+
+    if ((status = boinc_init()) != BOINC_API_SUCCESS) {
+        env->Throw(newBoincException(env, status));
+    }
 }
 
 JNIEXPORT jint JNICALL
@@ -48,4 +61,46 @@ Java_edu_berkeley_boinc_api_bridge_BasicAPI_boinc_1init_1options(
     options.send_status_msgs = env->GetBooleanField(jOptions, field);
 
 	return boinc_init_options(&options);
+}
+
+jclass findBoincExceptionClass(JNIEnv *env)
+{
+    // Cached for performance since this can never change.
+    static jclass boincExceClass = NULL;
+
+    if (boincExceClass == NULL) {
+    	boincExceClass = env->FindClass("edu/berkeley/boinc/jni/BoincException");
+        // Check class not found ex
+    }
+    return boincExceClass;
+}
+
+jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass boincExceClass)
+{
+    // Cached for performance since this can never change.
+    static jmethodID constrID = NULL;
+
+    if (constrID == NULL) {
+    	constrID = env->GetMethodID(boincExceClass, "<init>", "()I");
+    	if (constrID == NULL) {
+    		// handle error
+    	}
+    }
+    return constrID;
+}
+
+jthrowable newBoincException(JNIEnv *env, int status)
+{
+    jclass cls;
+    jmethodID constr;
+
+    cls = findBoincExceptionClass(env);
+    constr = findBoincExceptionConstructor(env, cls);
+
+	return (jthrowable) env->NewObject(cls, constr, status);
+}
+
+void throwNewBoincException(JNIEnv *env, int status)
+{
+	env->Throw(newBoincException(env, status));
 }

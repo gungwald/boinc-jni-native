@@ -10,7 +10,7 @@
 #
 
 CC=g++
-BOINC_INC=-I../boinc/api
+BOINC_INC=-I../boinc/api -I../boinc/lib
 JNI_INC=-I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers -I/Developer/SDKs/MacOSX10.4u.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
 JAVA_CLASSES=../boinc-jni/classes
 TARGET=libboinc-jni.jnilib
@@ -20,11 +20,11 @@ all: $(TARGET)
 $(TARGET): basicapi.o
 	$(CC) -dynamiclib -o $(TARGET) basicapi.o
 
-basicapi.o: basicapi.cxx edu_berkeley_boinc_api_bridge_BasicAPI.h
+basicapi.o: basicapi.cxx edu_berkeley_boinc_jni_Boinc.h
 	$(CC) -Wall -D_JNI_IMPLEMENTATION_ $(JNI_INC) $(BOINC_INC) -c basicapi.cxx
 	
-edu_berkeley_boinc_api_bridge_BasicAPI.h: $(JAVA_CLASSES)/edu/berkeley/boinc/api/bridge/BasicAPI.class
-	javah -classpath $(JAVA_CLASSES) -jni edu.berkeley.boinc.api.bridge.BasicAPI
+edu_berkeley_boinc_jni_Boinc.h: $(JAVA_CLASSES)/edu/berkeley/boinc/jni/Boinc.class
+	javah -classpath $(JAVA_CLASSES) -jni edu.berkeley.boinc.jni.Boinc
 
 clean:
 	rm *.o $(TARGET) edu_berkeley*.h
