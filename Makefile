@@ -9,23 +9,41 @@
 # bitness of the getenv.dll file.
 #
 
-CC=g++
+# Locations subject to change
 BOINC_INC=-I../boinc/api -I../boinc/lib
+CLASSES_DIR=../boinc-jni/classes
+
+BOINC_HEADER=edu_berkeley_boinc_jni_Boinc.h
+BOINC_CLASS_FILE=edu/berkeley/boinc/jni/Boinc.class
+BOINC_CLASS=edu.berkeley.boinc.jni.Boinc
+
+ifeq ($(OS),Windows_NT)
+    JNI_INC=-I"$(JAVA_HOME)/include"
+    TARGET=boinc-jni.dll
+else
+    UNAME := $(shell uname -s)
+    ifeq ($(UNAME),Darwin)
 JNI_INC=-I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers -I/Developer/SDKs/MacOSX10.4u.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
-JAVA_CLASSES=../boinc-jni/classes
 TARGET=libboinc-jni.jnilib
+    else
+    JNI_INC=
+    TARGET=libboinc-jni.so
+    endif
+endif
+
+CPPFLAGS=-D_JNI_IMPLEMENTATION_ $(JNI_INC) $(BOINC_INC)
+CXXFLAGS=-Wall
 
 all: $(TARGET)
 
 $(TARGET): basicapi.o
-	$(CC) -dynamiclib -o $(TARGET) basicapi.o
+	$(CXX) -dynamiclib -o $(TARGET) $<
 
-basicapi.o: basicapi.cxx edu_berkeley_boinc_jni_Boinc.h
-	$(CC) -Wall -D_JNI_IMPLEMENTATION_ $(JNI_INC) $(BOINC_INC) -c basicapi.cxx
+basicapi.o: basicapi.cxx 
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $<
 	
-edu_berkeley_boinc_jni_Boinc.h: $(JAVA_CLASSES)/edu/berkeley/boinc/jni/Boinc.class
-	javah -classpath $(JAVA_CLASSES) -jni edu.berkeley.boinc.jni.Boinc
+$(BOINC_HEADER): $(CLASSES_DIR)/$(BOINC_CLASS_FILE)
+	javah -classpath $(CLASSES_DIR) -jni $(BOINC_CLASS)
 
 clean:
-	rm *.o $(TARGET) edu_berkeley*.h
-
+	rm *.o $(TARGET) $(BOINC_HEADER)
