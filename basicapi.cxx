@@ -20,48 +20,72 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__
     int status;
 
     if ((status = boinc_init()) != BOINC_API_SUCCESS) {
-        env->Throw(newBoincException(env, status));
+        throwNewBoincException(env, status);
     }
 }
 
-JNIEXPORT jint JNICALL
-Java_edu_berkeley_boinc_api_bridge_BasicAPI_boinc_1init_1options(
-		JNIEnv *env,
-		jclass cls,
-		jobject jOptions)
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    init
+ * Signature: (ZZZZZZZZ)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__ZZZZZZZZ
+  (JNIEnv *env, jobject boinc, jboolean normalThreadPriority, jboolean mainProgram, jboolean checkHeartbeat, jboolean handleProcessControl, jboolean sendStatusMessages, jboolean directProcessAction, jboolean multiThread, jboolean multiProcess)
 {
+	int status;
     BOINC_OPTIONS options;
-    jfieldID field;
-    jclass jOptionsClass;
 
-    jOptionsClass = env->GetObjectClass(jOptions);
+    options.normal_thread_priority = normalThreadPriority;
+    options.main_program = mainProgram;
+    options.check_heartbeat = checkHeartbeat;
+    options.handle_process_control = handleProcessControl;
+    options.send_status_msgs = sendStatusMessages;
+    options.direct_process_action = directProcessAction;
+    options.multi_thread = multiThread;
+    options.multi_process = multiProcess;
 
-    field = env->GetFieldID(jOptionsClass, "check_heartbeat", "B");
-    options.check_heartbeat = env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "direct_process_action", "B");
-    options.direct_process_action = env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "handle_process_control", "B");
-    options.handle_process_control = env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "main_program", "B");
-    options.main_program = env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "multi_process", "B");
-    options.multi_process= env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "multi_thread", "B");
-    options.multi_thread = env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "normal_thread_priority", "B");
-    options.normal_thread_priority = env->GetBooleanField(jOptions, field);
-
-    field = env->GetFieldID(jOptionsClass, "send_status_msgs", "B");
-    options.send_status_msgs = env->GetBooleanField(jOptions, field);
-
-	return boinc_init_options(&options);
+	if ((status = boinc_init_options(&options)) != BOINC_API_SUCCESS) {
+		throwNewBoincException(env, status);
+	}
 }
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    finish
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__I
+  (JNIEnv *env, jobject jBoind, jint jStatusIn)
+{
+    int status;
+
+	if ((status = boinc_finish(jStatusIn)) != BOINC_API_SUCCESS) {
+		throwNewBoincException(env, status);
+	}
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    finish
+ * Signature: (ILjava/lang/String;Z)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__ILjava_lang_String_2Z
+  (JNIEnv *env, jobject jBoind, jint jStatusIn, jstring jMessage, jboolean jIsNotice)
+{
+
+    int status;
+    const char *message;
+    jboolean isCopy;
+
+    if ((message = env->GetStringUTFChars(jMessage, &isCopy)) != NULL) {
+    	if ((status = boinc_finish_message(jStatusIn, message, jIsNotice)) != BOINC_API_SUCCESS) {
+    		throwNewBoincException(env, status);
+    	}
+        env->ReleaseStringUTFChars(jMessage, message);
+	}
+}
+
+/* Private functions */
 
 jclass findBoincExceptionClass(JNIEnv *env)
 {
@@ -70,11 +94,16 @@ jclass findBoincExceptionClass(JNIEnv *env)
 
     if (boincExceClass == NULL) {
     	boincExceClass = env->FindClass("edu/berkeley/boinc/jni/BoincException");
-        // Check class not found ex
+        // boincExceClass will be NULL if it failed. An exception probably also occurred.
     }
     return boincExceClass;
 }
 
+/**
+ * Finds the constructor or returns the cached constructor if it was
+ * previously found.
+ * @return The constructor's method or NULL if it was not found.
+ */
 jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass boincExceClass)
 {
     // Cached for performance since this can never change.
@@ -82,9 +111,7 @@ jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass boincExceClass)
 
     if (constrID == NULL) {
     	constrID = env->GetMethodID(boincExceClass, "<init>", "()I");
-    	if (constrID == NULL) {
-    		// handle error
-    	}
+        // constrID will be NULL if it failed. An exception probably also occurred.
     }
     return constrID;
 }
@@ -93,14 +120,21 @@ jthrowable newBoincException(JNIEnv *env, int status)
 {
     jclass cls;
     jmethodID constr;
+    jthrowable e = NULL;
 
-    cls = findBoincExceptionClass(env);
-    constr = findBoincExceptionConstructor(env, cls);
-
-	return (jthrowable) env->NewObject(cls, constr, status);
+    if ((cls = findBoincExceptionClass(env)) != NULL) {
+    	if ((constr = findBoincExceptionConstructor(env, cls)) != NULL) {
+    		e = (jthrowable) env->NewObject(cls, constr, status);
+    	}
+    }
+	return NULL;
 }
 
 void throwNewBoincException(JNIEnv *env, int status)
 {
-	env->Throw(newBoincException(env, status));
+    jthrowable e;
+
+    if ((e = newBoincException(env, status))) {
+    	env->Throw(e);
+    }
 }

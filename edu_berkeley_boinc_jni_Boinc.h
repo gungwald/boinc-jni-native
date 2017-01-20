@@ -20,25 +20,25 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__
 /*
  * Class:     edu_berkeley_boinc_jni_Boinc
  * Method:    init
- * Signature: (Ledu/berkeley/boinc/jni/ApplicationOptions;)I
+ * Signature: (ZZZZZZZZ)V
  */
-JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__Ledu_berkeley_boinc_jni_ApplicationOptions_2
-  (JNIEnv *, jobject, jobject);
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__ZZZZZZZZ
+  (JNIEnv *, jobject, jboolean, jboolean, jboolean, jboolean, jboolean, jboolean, jboolean, jboolean);
 
 /*
  * Class:     edu_berkeley_boinc_jni_Boinc
  * Method:    finish
- * Signature: (I)I
+ * Signature: (I)V
  */
-JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__I
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__I
   (JNIEnv *, jobject, jint);
 
 /*
  * Class:     edu_berkeley_boinc_jni_Boinc
  * Method:    finish
- * Signature: (ILjava/lang/String;Z)I
+ * Signature: (ILjava/lang/String;Z)V
  */
-JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__ILjava_lang_String_2Z
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__ILjava_lang_String_2Z
   (JNIEnv *, jobject, jint, jstring, jboolean);
 
 /*
