@@ -1,5 +1,7 @@
+#include <string>
 #include <jni.h>
 #include <boinc_api.h>
+#include <app_ipc.h>	/* boinc_resolve_filename */
 
 #include "edu_berkeley_boinc_jni_Boinc.h"
 
@@ -59,7 +61,7 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__I
 {
     int status;
 
-	if ((status = boinc_finish(jStatusIn)) != BOINC_API_SUCCESS) {
+	if ((status = boinc_finish((int) jStatusIn)) != BOINC_API_SUCCESS) {
 		throwNewBoincException(env, status);
 	}
 }
@@ -70,19 +72,44 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__I
  * Signature: (ILjava/lang/String;Z)V
  */
 JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__ILjava_lang_String_2Z
-  (JNIEnv *env, jobject jBoind, jint jStatusIn, jstring jMessage, jboolean jIsNotice)
+  (JNIEnv *env, jobject jBoinc, jint jStatusIn, jstring jMessage, jboolean jIsNotice)
 {
-
     int status;
     const char *message;
     jboolean isCopy;
 
     if ((message = env->GetStringUTFChars(jMessage, &isCopy)) != NULL) {
-    	if ((status = boinc_finish_message(jStatusIn, message, jIsNotice)) != BOINC_API_SUCCESS) {
+    	if ((status = boinc_finish_message((int) jStatusIn, message, jIsNotice)) != BOINC_API_SUCCESS) {
     		throwNewBoincException(env, status);
     	}
         env->ReleaseStringUTFChars(jMessage, message);
 	}
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    resolveFileName
+ * Signature: (Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_edu_berkeley_boinc_jni_Boinc_resolveFileName
+  (JNIEnv *env, jobject jBoinc, jstring jLogicalFileName)
+{
+    int status;
+    const char *logicalFileName;
+    jboolean isCopy;
+    std::string physicalFileName;
+    jstring jPhysicalFileName = NULL;
+
+	if ((logicalFileName = env->GetStringUTFChars(jLogicalFileName, &isCopy)) != NULL) {
+		if ((status = boinc_resolve_filename_s(logicalFileName, physicalFileName)) == BOINC_API_SUCCESS) {
+            jPhysicalFileName = env->NewStringUTF(physicalFileName.c_str());
+		}
+		else {
+			throwNewBoincException(env, status);
+		}
+        env->ReleaseStringUTFChars(jLogicalFileName, logicalFileName);
+	}
+    return jPhysicalFileName;
 }
 
 /* Private functions */
@@ -124,17 +151,19 @@ jthrowable newBoincException(JNIEnv *env, int status)
 
     if ((cls = findBoincExceptionClass(env)) != NULL) {
     	if ((constr = findBoincExceptionConstructor(env, cls)) != NULL) {
-    		e = (jthrowable) env->NewObject(cls, constr, status);
+    		e = (jthrowable) env->NewObject(cls, constr, (jint) status);
+            // If this fails e will be NULL, which is what should be returned
+    		// in this case.
     	}
     }
-	return NULL;
+	return e;
 }
 
 void throwNewBoincException(JNIEnv *env, int status)
 {
     jthrowable e;
 
-    if ((e = newBoincException(env, status))) {
+    if ((e = newBoincException(env, status)) != NULL) {
     	env->Throw(e);
     }
 }
