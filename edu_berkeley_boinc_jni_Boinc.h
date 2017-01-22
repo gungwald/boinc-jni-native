@@ -75,22 +75,6 @@ JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_sendTrickleUp
 
 /*
  * Class:     edu_berkeley_boinc_jni_Boinc
- * Method:    setMinCheckpointPeriod
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_setMinCheckpointPeriod
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     edu_berkeley_boinc_jni_Boinc
- * Method:    checkpointCompleted
- * Signature: ()I
- */
-JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_checkpointCompleted
-  (JNIEnv *, jobject);
-
-/*
- * Class:     edu_berkeley_boinc_jni_Boinc
  * Method:    reportFractionDone
  * Signature: (D)I
  */
@@ -128,6 +112,54 @@ JNIEXPORT jint JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportAppStatus
  */
 JNIEXPORT jboolean JNICALL Java_edu_berkeley_boinc_jni_Boinc_isTimeToCheckpoint
   (JNIEnv *, jobject);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    setMinimumCheckpointPeriod
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_setMinimumCheckpointPeriod
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    reportThatCheckpointIsComplete
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportThatCheckpointIsComplete
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    beginCriticalSection
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_beginCriticalSection
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    endCriticalSection
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_endCriticalSection
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    registerTimerCallback
+ * Signature: (Ledu/berkeley/boinc/jni/TimerHandler;)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_registerTimerCallback
+  (JNIEnv *, jobject, jobject);
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    exitAndRestart
+ * Signature: (ILjava/lang/String;Z)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_exitAndRestart
+  (JNIEnv *, jobject, jint, jstring, jboolean);
 
 #ifdef __cplusplus
 }

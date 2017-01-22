@@ -23,11 +23,11 @@ ifeq ($(OS),Windows_NT)
 else
     UNAME := $(shell uname -s)
     ifeq ($(UNAME),Darwin)
-JNI_INC=-I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers -I/Developer/SDKs/MacOSX10.4u.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
-TARGET=libboinc-jni.jnilib
+        JNI_INC=-I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers -I/Developer/SDKs/MacOSX10.4u.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+        TARGET=libboinc-jni.jnilib
     else
-    JNI_INC=
-    TARGET=libboinc-jni.so
+        JNI_INC=
+        TARGET=libboinc-jni.so
     endif
 endif
 
@@ -39,7 +39,7 @@ all: $(TARGET)
 $(TARGET): basicapi.o
 	$(CXX) -dynamiclib -o $(TARGET) $<
 
-basicapi.o: basicapi.cxx 
+basicapi.o: basicapi.cxx $(BOINC_HEADER)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $<
 	
 $(BOINC_HEADER): $(CLASSES_DIR)/$(BOINC_CLASS_FILE)

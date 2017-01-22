@@ -7,14 +7,22 @@
 
 const int BOINC_API_SUCCESS = 0;
 
+static jobject globalTimerHandler = NULL;
+static jmethodID globalHandleTimerEventMethodID = NULL;
+static JavaVM *globalJvm = NULL;
+
 static jclass findBoincExceptionClass(JNIEnv *env);
 static jthrowable newBoincException(JNIEnv *env, int status);
 static void throwNewBoincException(JNIEnv *env, int status);
+static void handleTimerEvent();
 
-/*
- * Class:     edu_berkeley_boinc_jni_Boinc
- * Method:    init
- * Signature: ()V
+/**
+ * Calls the native no-argument boinc_init function.
+ *
+ * The status return value from boinc_init is converted to a
+ * BoincException, if it is non-zero.
+ *
+ * @throws	BoincException If initialization fails
  */
 JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__
   (JNIEnv *env, jobject boinc)
@@ -112,18 +120,125 @@ JNIEXPORT jstring JNICALL Java_edu_berkeley_boinc_jni_Boinc_resolveFileName
     return jPhysicalFileName;
 }
 
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    isTimeToCheckpoint
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_edu_berkeley_boinc_jni_Boinc_isTimeToCheckpoint
+  (JNIEnv *env, jobject boinc)
+{
+    // Apparently this function never causes an error...
+	return (jboolean) boinc_time_to_checkpoint();
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    setMinCheckpointPeriod
+ * Signature: (I)I
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_setMinmumCheckpointPeriod
+  (JNIEnv *env, jobject boinc, jint nsecs)
+{
+    int status;
+
+	if ((status = boinc_set_min_checkpoint_period((int) nsecs)) != BOINC_API_SUCCESS) {
+		throwNewBoincException(env, status);
+	}
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    checkpointCompleted
+ * Signature: ()I
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportThatCheckpointIsCompleted
+  (JNIEnv *env, jobject boinc)
+{
+	int status;
+
+	if ((status = boinc_checkpoint_completed()) != BOINC_API_SUCCESS) {
+		throwNewBoincException(env, status);
+	}
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    beginCriticalSection
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_beginCriticalSection
+  (JNIEnv *env, jobject boinc)
+{
+	boinc_begin_critical_section();
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    endCriticalSection
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_endCriticalSection
+  (JNIEnv *env, jobject boinc)
+{
+	boinc_end_critical_section();
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    registerTimerCallback
+ * Signature: (Ledu/berkeley/boinc/jni/TimerHandler;)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_registerTimerCallback
+  (JNIEnv *env, jobject boinc, jobject jTimerHandlerInstance)
+{
+    jclass jTimerHandlerClass;
+    jmethodID callbackMethod;
+
+    if ((jTimerHandlerClass = env->GetObjectClass(jTimerHandlerInstance)) != NULL) {
+        if ((callbackMethod = env->GetMethodID(jTimerHandlerClass, "handleTimerEvent", "()V")) != NULL) {
+            if (env->GetJavaVM(&globalJvm) == JNI_OK) {
+                globalTimerHandler = jTimerHandlerInstance;
+            	globalHandleTimerEventMethodID = callbackMethod;
+            	boinc_register_timer_callback(handleTimerEvent);
+            }
+        }
+    }
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    exitAndRestart
+ * Signature: (ILjava/lang/String;Z)V
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_exitAndRestart
+  (JNIEnv *env, jobject boinc, jint jDelaySeconds, jstring jReason, jboolean jIsNotice)
+{
+    int status;
+    bool isNotice;
+    const char *reason;
+    jboolean isCopy;
+
+    if ((reason = env->GetStringUTFChars(jReason, &isCopy)) != NULL) {
+        jIsNotice ? isNotice=true : isNotice=false;
+    	if ((status = boinc_temporary_exit((int) jDelaySeconds, reason, isNotice)) != BOINC_API_SUCCESS) {
+    		throwNewBoincException(env, status);
+    	}
+    }
+}
+
 /* Private functions */
 
 jclass findBoincExceptionClass(JNIEnv *env)
 {
     // Cached for performance since this can never change.
-    static jclass boincExceClass = NULL;
+    static jclass cls = NULL;
 
-    if (boincExceClass == NULL) {
-    	boincExceClass = env->FindClass("edu/berkeley/boinc/jni/BoincException");
-        // boincExceClass will be NULL if it failed. An exception probably also occurred.
+    if (cls == NULL) {
+    	cls = env->FindClass("edu/berkeley/boinc/jni/BoincException");
+        // cls will be NULL if it failed. An exception probably also occurred.
     }
-    return boincExceClass;
+    return cls;
 }
 
 /**
@@ -131,16 +246,16 @@ jclass findBoincExceptionClass(JNIEnv *env)
  * previously found.
  * @return The constructor's method or NULL if it was not found.
  */
-jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass boincExceClass)
+jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass cls)
 {
     // Cached for performance since this can never change.
-    static jmethodID constrID = NULL;
+    static jmethodID method = NULL;
 
-    if (constrID == NULL) {
-    	constrID = env->GetMethodID(boincExceClass, "<init>", "()I");
-        // constrID will be NULL if it failed. An exception probably also occurred.
+    if (method == NULL) {
+    	method = env->GetMethodID(cls, "<init>", "()I");
+        // method will be NULL if it failed. An exception probably also occurred.
     }
-    return constrID;
+    return method;
 }
 
 jthrowable newBoincException(JNIEnv *env, int status)
@@ -166,4 +281,20 @@ void throwNewBoincException(JNIEnv *env, int status)
     if ((e = newBoincException(env, status)) != NULL) {
     	env->Throw(e);
     }
+}
+
+/**
+ * Native callback for timer event. Calls the registered Java timer handler.
+ */
+void handleTimerEvent()
+{
+    JNIEnv *env;
+
+    if (globalJvm != NULL) {
+    	if (globalTimerHandler != NULL && globalHandleTimerEventMethodID != NULL) {
+    		if ((globalJvm->AttachCurrentThread((void **) &env, NULL)) == JNI_OK) {
+    			env->CallVoidMethod(globalTimerHandler, globalHandleTimerEventMethodID);
+    		}
+    	}
+	}
 }
