@@ -5,16 +5,16 @@
 
 #include "edu_berkeley_boinc_jni_Boinc.h"
 
-const int BOINC_API_SUCCESS = 0;
-
-static jobject globalTimerHandler = NULL;
-static jmethodID globalHandleTimerEventMethodID = NULL;
-static JavaVM *globalJvm = NULL;
-
 static jclass findBoincExceptionClass(JNIEnv *env);
 static jthrowable newBoincException(JNIEnv *env, int status);
 static void throwNewBoincException(JNIEnv *env, int status);
 static void handleTimerEvent();
+
+const int BOINC_OK = 0;
+
+static jobject globalTimerHandler = NULL;
+static jmethodID globalHandleTimerEventMethodID = NULL;
+static JavaVM *globalJvm = NULL;
 
 /**
  * Calls the native no-argument boinc_init function.
@@ -29,7 +29,10 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__
 {
     int status;
 
-    if ((status = boinc_init()) != BOINC_API_SUCCESS) {
+    if ((status = boinc_init()) == BOINC_OK) {
+        // Success
+    }
+    else {
         throwNewBoincException(env, status);
     }
 }
@@ -54,7 +57,10 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_init__ZZZZZZZZ
     options.multi_thread = multiThread;
     options.multi_process = multiProcess;
 
-	if ((status = boinc_init_options(&options)) != BOINC_API_SUCCESS) {
+	if ((status = boinc_init_options(&options)) == BOINC_OK) {
+        // Success
+	}
+	else {
 		throwNewBoincException(env, status);
 	}
 }
@@ -69,7 +75,10 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__I
 {
     int status;
 
-	if ((status = boinc_finish((int) jStatusIn)) != BOINC_API_SUCCESS) {
+	if ((status = boinc_finish((int) jStatusIn)) == BOINC_OK) {
+        // Success
+	}
+	else {
 		throwNewBoincException(env, status);
 	}
 }
@@ -87,11 +96,19 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_finish__ILjava_lang_Str
     jboolean isCopy;
 
     if ((message = env->GetStringUTFChars(jMessage, &isCopy)) != NULL) {
-    	if ((status = boinc_finish_message((int) jStatusIn, message, jIsNotice)) != BOINC_API_SUCCESS) {
+    	if ((status = boinc_finish_message((int) jStatusIn, message, jIsNotice)) == BOINC_OK) {
+            // Success
+    	}
+    	else {
     		throwNewBoincException(env, status);
     	}
+        // ReleaseStringUTFChars has no return value and does not throw an
+    	// exception.
         env->ReleaseStringUTFChars(jMessage, message);
 	}
+    // If GetStringUTFChars returns NULL, an OutOfMemoryError was thrown.
+    // In that case, this function ends without doing anything else so that
+    // the caller can receive the error.
 }
 
 /*
@@ -109,14 +126,21 @@ JNIEXPORT jstring JNICALL Java_edu_berkeley_boinc_jni_Boinc_resolveFileName
     jstring jPhysicalFileName = NULL;
 
 	if ((logicalFileName = env->GetStringUTFChars(jLogicalFileName, &isCopy)) != NULL) {
-		if ((status = boinc_resolve_filename_s(logicalFileName, physicalFileName)) == BOINC_API_SUCCESS) {
+		if ((status = boinc_resolve_filename_s(logicalFileName, physicalFileName)) == BOINC_OK) {
             jPhysicalFileName = env->NewStringUTF(physicalFileName.c_str());
+            // If NewStringUTF returns NULL, an OutOfMemoryError was thrown.
 		}
 		else {
 			throwNewBoincException(env, status);
 		}
+        // ReleaseStringUTFChars has no return value and does not throw an
+    	// exception.
         env->ReleaseStringUTFChars(jLogicalFileName, logicalFileName);
 	}
+    // If GetStringUTFChars returns NULL, an OutOfMemoryError was thrown.
+    // In that case, this function ends without doing anything else so that
+    // the caller can receive the error.
+
     return jPhysicalFileName;
 }
 
@@ -128,7 +152,7 @@ JNIEXPORT jstring JNICALL Java_edu_berkeley_boinc_jni_Boinc_resolveFileName
 JNIEXPORT jboolean JNICALL Java_edu_berkeley_boinc_jni_Boinc_isTimeToCheckpoint
   (JNIEnv *env, jobject boinc)
 {
-    // Apparently this function never causes an error...
+    // This function has no way to indicate that an error occurred.
 	return (jboolean) boinc_time_to_checkpoint();
 }
 
@@ -142,7 +166,7 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_setMinmumCheckpointPeri
 {
     int status;
 
-	if ((status = boinc_set_min_checkpoint_period((int) nsecs)) != BOINC_API_SUCCESS) {
+	if ((status = boinc_set_min_checkpoint_period((int) nsecs)) != BOINC_OK) {
 		throwNewBoincException(env, status);
 	}
 }
@@ -157,7 +181,7 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportThatCheckpointIsC
 {
 	int status;
 
-	if ((status = boinc_checkpoint_completed()) != BOINC_API_SUCCESS) {
+	if ((status = boinc_checkpoint_completed()) != BOINC_OK) {
 		throwNewBoincException(env, status);
 	}
 }
@@ -221,7 +245,7 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_exitAndRestart
 
     if ((reason = env->GetStringUTFChars(jReason, &isCopy)) != NULL) {
         jIsNotice ? isNotice=true : isNotice=false;
-    	if ((status = boinc_temporary_exit((int) jDelaySeconds, reason, isNotice)) != BOINC_API_SUCCESS) {
+    	if ((status = boinc_temporary_exit((int) jDelaySeconds, reason, isNotice)) != BOINC_OK) {
     		throwNewBoincException(env, status);
     	}
     }
