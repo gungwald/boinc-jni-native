@@ -282,6 +282,14 @@ jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass cls)
     return method;
 }
 
+/**
+ * Creates and returns the BoincException Java object. If any failure occurs,
+ * NULL will be returned and a Java exception will be set to be thrown.
+ * @param	env	The JNI environment
+ * @param	status	The code to be passed to the BoincException constructor
+ * @return	A BoincException instance or NULL if a failure occurs
+ * @throws	ClassNotFoundException, MethodNotFound
+ */
 jthrowable newBoincException(JNIEnv *env, int status)
 {
     jclass cls;
@@ -290,14 +298,26 @@ jthrowable newBoincException(JNIEnv *env, int status)
 
     if ((cls = findBoincExceptionClass(env)) != NULL) {
     	if ((constr = findBoincExceptionConstructor(env, cls)) != NULL) {
+            // If this fails, e will be assigned NULL, which is what should
+    		// be returned in this case and a Java exception will be set.
     		e = (jthrowable) env->NewObject(cls, constr, (jint) status);
-            // If this fails e will be NULL, which is what should be returned
-    		// in this case.
     	}
     }
+    // If any failure occurred, then e was not given valid value, but still
+    // has its initial value of NULL. That is exactly what needs to be
+    // returned to indicate that an error occurred. Whatever function failed
+    // must have also set a Java exception to be thrown.
 	return e;
 }
 
+/**
+ * Creates and throws a BoincException.
+ * @param	env	The JNI environment
+ * @param	status	The code to be passed to the BoincException constructor
+ * @return	A BoincException instance or NULL if a failure occurs
+ * @throw	ClassNotFoundException, MethodNotFound
+ * @throw	BoincException	If nothing else fails
+ */
 void throwNewBoincException(JNIEnv *env, int status)
 {
     jthrowable e;
@@ -305,6 +325,11 @@ void throwNewBoincException(JNIEnv *env, int status)
     if ((e = newBoincException(env, status)) != NULL) {
     	env->Throw(e);
     }
+    // If newBoincException failed with a NULL return, a Java
+    // exception will be set to be thrown on returning to Java
+    // code. If it succeeds, then a new BoincException will be
+    // thrown. In either case, nothing is returned because
+    // exceptions are always "thrown".
 }
 
 /**
