@@ -188,6 +188,20 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportThatCheckpointIsC
 
 /*
  * Class:     edu_berkeley_boinc_jni_Boinc
+ * Method:    reportFractionDone
+ * Signature: (D)I
+ */
+JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportFractionDone
+  (JNIEnv *env, jobject boinc, jdouble jFractionDone)
+{
+    int status;
+	if ((status = boinc_fraction_done(jFractionDone)) != BOINC_OK) {
+		throwNewBoincException(env, status);
+	}
+}
+
+/*
+ * Class:     edu_berkeley_boinc_jni_Boinc
  * Method:    beginCriticalSection
  * Signature: ()V
  */
@@ -248,11 +262,20 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_exitAndRestart
     	if ((status = boinc_temporary_exit((int) jDelaySeconds, reason, isNotice)) != BOINC_OK) {
     		throwNewBoincException(env, status);
     	}
+        env->ReleaseStringUTFChars(jReason, reason);
     }
 }
 
 /* Private functions */
 
+/**
+ * Finds and caches the BoincException class.
+ * @param	env	The JNI environment
+ * @throws  ClassFormatError if the class data does not specify a valid class.
+ * @throws  ClassCircularityError if a class or interface would be its own superclass or superinterface.
+ * @throws  NoClassDefFoundError if no definition for a requested class or interface can be found.
+ * @throws  OutOfMemoryError if the system runs out of memory.
+ */
 jclass findBoincExceptionClass(JNIEnv *env)
 {
     // Cached for performance since this can never change.
@@ -269,6 +292,9 @@ jclass findBoincExceptionClass(JNIEnv *env)
  * Finds the constructor or returns the cached constructor if it was
  * previously found.
  * @return The constructor's method or NULL if it was not found.
+ * @throws NoSuchMethodError: if the specified method cannot be found.
+ * @throws ExceptionInInitializerError: if the class initializer fails due to an exception.
+ * @throws OutOfMemoryError: if the system runs out of memory.
  */
 jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass cls)
 {
@@ -288,7 +314,8 @@ jmethodID findBoincExceptionConstructor(JNIEnv *env, jclass cls)
  * @param	env	The JNI environment
  * @param	status	The code to be passed to the BoincException constructor
  * @return	A BoincException instance or NULL if a failure occurs
- * @throws	ClassNotFoundException, MethodNotFound
+ * @throws  InstantiationException: if the class is an interface or an abstract class.
+ * @throws  OutOfMemoryError: if the system runs out of memory.
  */
 jthrowable newBoincException(JNIEnv *env, int status)
 {
