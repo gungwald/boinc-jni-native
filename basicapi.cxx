@@ -191,7 +191,7 @@ JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportThatCheckpointIsC
  * Method:    reportFractionDone
  * Signature: (D)I
  */
-JNIEXPORT void JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportFractionDone
+JNIEXPORT int JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportFractionDone
   (JNIEnv *env, jobject boinc, jdouble jFractionDone)
 {
     int status;
