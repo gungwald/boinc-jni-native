@@ -198,6 +198,7 @@ JNIEXPORT int JNICALL Java_edu_berkeley_boinc_jni_Boinc_reportFractionDone
 	if ((status = boinc_fraction_done(jFractionDone)) != BOINC_OK) {
 		throwNewBoincException(env, status);
 	}
+    return status;
 }
 
 /*

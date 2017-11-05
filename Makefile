@@ -26,13 +26,18 @@ else
     ifeq ($(UNAME),Darwin)
         JNI_INC=-I/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Headers -I/Developer/SDKs/MacOSX10.4u.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
         TARGET=libboinc-jni.jnilib
+        MAKE_SHARED_LIB=-dynamiclib
     else 
     	ifeq ($(UNAME),Linux)
         	JNI_INC=-I/usr/lib/jvm/java/include -I/usr/lib/jvm/java/include/linux
         	TARGET=libboinc-jni.so    
+        	MAKE_SHARED_LIB=-shared
+            SHARED_LIB_CODE=-fpic
     	else
         	JNI_INC=-I/usr/java/include
         	TARGET=libboinc-jni.so
+        	MAKE_SHARED_LIB=-shared
+            SHARED_LIB_CODE=-fpic
         endif
     endif
 endif
@@ -43,10 +48,10 @@ CXXFLAGS=-Wall
 all: $(TARGET)
 
 $(TARGET): basicapi.o
-	$(CXX) -dynamiclib -o $(TARGET) $<
+	$(CXX) $(MAKE_SHARED_LIB) -o $(TARGET) $<
 
 basicapi.o: basicapi.cxx $(BOINC_HEADER)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $<
+	$(CXX) -c $(CXXFLAGS) $(CPPFLAGS) $(SHARED_LIB_CODE) $<
 	
 $(BOINC_HEADER): $(CLASSES_DIR)/$(BOINC_CLASS_FILE)
 	javah -classpath $(CLASSES_DIR) -jni $(BOINC_CLASS)

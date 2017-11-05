@@ -18,17 +18,21 @@
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.macosx.base.563813546.1867299516" name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.90481791" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.base.8839260" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder id="cdt.managedbuild.target.gnu.builder.base.1486649808" managedBuildOn="false" name="Gnu Make Builder.Default" superClass="cdt.managedbuild.target.gnu.builder.base"/>
+							<builder id="cdt.managedbuild.target.gnu.builder.base.1486649808" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.798074878" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.933121252" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
-								<option id="gnu.cpp.compiler.option.include.paths.1392338114" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/Users/bill/git/boinc/api"/>
+								<option id="gnu.cpp.compiler.option.include.paths.1392338114" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/boinc-api}&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include/linux"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.766814342" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.547556466" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
-								<option id="gnu.c.compiler.option.include.paths.1085684069" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/Users/bill/git/boinc/api"/>
+								<option id="gnu.c.compiler.option.include.paths.1085684069" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include/linux"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/boinc-api}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1545332415" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -40,8 +44,10 @@
 								</inputType>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.assembler.base.650221500" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
-								<option id="gnu.both.asm.option.include.paths.1133211874" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/Users/bill/git/boinc/api"/>
+								<option id="gnu.both.asm.option.include.paths.1133211874" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include"/>
+									<listOptionValue builtIn="false" value="/usr/lib/jvm/java/include/linux"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/boinc-api}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.114441577" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -55,7 +61,13 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="libboincjava.null.922498610" name="libboincjava"/>
 	</storageModule>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Default">
+			<resource resourceType="PROJECT" workspacePath="/boinc-jni-native"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.563813546;cdt.managedbuild.toolchain.gnu.macosx.base.563813546.1867299516;cdt.managedbuild.tool.gnu.cpp.compiler.macosx.base.1166716598;cdt.managedbuild.tool.gnu.cpp.compiler.input.1349317927">
@@ -64,7 +76,11 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.563813546;cdt.managedbuild.toolchain.gnu.macosx.base.563813546.1867299516;cdt.managedbuild.tool.gnu.c.compiler.macosx.base.2077587341;cdt.managedbuild.tool.gnu.c.compiler.input.2099892338">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.563813546;cdt.managedbuild.toolchain.gnu.macosx.base.563813546.1867299516;cdt.managedbuild.tool.gnu.c.compiler.base.547556466;cdt.managedbuild.tool.gnu.c.compiler.input.1545332415">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.macosx.base.563813546;cdt.managedbuild.toolchain.gnu.macosx.base.563813546.1867299516;cdt.managedbuild.tool.gnu.cpp.compiler.base.933121252;cdt.managedbuild.tool.gnu.cpp.compiler.input.766814342">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 </cproject>
